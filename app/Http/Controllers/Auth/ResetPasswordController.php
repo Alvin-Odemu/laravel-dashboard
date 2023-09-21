@@ -8,16 +8,24 @@ use Illuminate\Foundation\Auth\ResetsPasswords;
 
 class ResetPasswordController extends Controller
 {
-    /*
-    |--------------------------------------------------------------------------
-    | Password Reset Controller
-    |--------------------------------------------------------------------------
-    |
-    | This controller is responsible for handling password reset requests
-    | and uses a simple trait to include this behavior. You're free to
-    | explore this trait and override any methods you wish to tweak.
-    |
-    */
+    public function submitResetPasswordForm(Request $request)
+    {
+        $request->validate([
+            'token' => 'required',
+            'password' => 'required|confirmed',
+        ]);
+    
+        $user = PasswordBroker::getUserByToken($request->token);
+    
+        if (!$user) {
+            return redirect()->back()->withErrors(['token' => 'This password reset token is invalid.']);
+        }
+    
+        $user->password = Hash::make($request->password);
+        $user->save();
+    
+        return redirect()->route('login')->with('success', 'Your password has been reset successfully.');
+    }
 
     use ResetsPasswords;
 
